@@ -6,13 +6,20 @@ namespace Advanced_Text_Adventure
     {
         static void Main(string[] args)
         {
-            Reader.WriteLine("THINK FAST!\n", 20);
+            TestEnemy enemy = new(name: "ukoG");
+            Friendly player = new(name: "Lapis");
+
+            Battle testBattle = new(new Friendly[] { player }, new Enemy[] { enemy });
+            testBattle.Start();
+
+            /*
+            Reader.WriteLine("THINK FAST!\n", 10);
             ConsoleKeyInfo keyResult = Reader.ReadTimed(500);
 
             if (keyResult.Key != ConsoleKey.None)
                 Reader.WriteLine("PARRY!", 60, ConsoleColor.Green);
             else
-                Reader.WriteLine("EXPLODEEEEEEEEEEEEEEEEEEEEEEEE", 80, ConsoleColor.Red);
+                Reader.WriteLine("EXPLODEEEEEEEEEEEEEEEEEEEEEEEE", 80, ConsoleColor.Red);*/
         }
     }
 }
