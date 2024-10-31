@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Advanced_Text_Adventure.Misc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,21 +15,55 @@ namespace Advanced_Text_Adventure
         public float health;
         public float maxHealth;
 
-        public bool isDead = false;
+        public (float, float) position = (0, 0);
+        protected (float, float) prevPosition = (0, 0);
 
-        public bool canBeDowned = false;
-        public bool isDowned = false;
+        public float speed = 1;
+
+        public ConsoleColor color;
+
+        public bool isDead = false;
 
         public BaseCharacter(string name, bool isEnemy = false, float health = 100, float maxHealth = 100)
         {
             this.name = name;
             this.isEnemy = isEnemy;
 
-            if (!isEnemy)
-                canBeDowned = true;
-
             this.health = health;
             this.maxHealth = maxHealth;
+        }
+
+        // Update
+
+        public abstract void DoAction();
+
+        public bool ClampPosition()
+        {
+            (float, float) oldPosition = position;
+            position.Item1 = Math.Clamp(position.Item1, Canvas.baseWidth + 1, Canvas.width + Canvas.baseWidth - 1);
+            position.Item2 = Math.Clamp(position.Item2, Canvas.baseHeight + 1, Canvas.height + Canvas.baseHeight - 1);
+
+            bool isOnMapBounds = position.Equals(oldPosition);
+            return isOnMapBounds;
+        }
+
+        // Canvas
+
+        public void Draw()
+        {
+            if (position.Item1 != prevPosition.Item1 || position.Item2 != prevPosition.Item2)
+            {
+                Console.SetCursorPosition((int)prevPosition.Item1, (int)prevPosition.Item2);
+                Reader.Write(" ");
+            }
+
+            if (!isDead)
+            {
+                Console.SetCursorPosition((int)position.Item1, (int)position.Item2);
+                prevPosition = (position.Item1, position.Item2);
+
+                Reader.Write("█", -1, color);
+            }
         }
 
         // Damage
@@ -37,17 +72,19 @@ namespace Advanced_Text_Adventure
         {
             health = Math.Clamp(health - damage, 0, maxHealth);
 
-            if (health <= 0 && !isDowned && canBeDowned)
-                Down();
+            if (health <= 0)
+                Die();
         }
 
-        public void Down()
+        public void Die()
         {
-            if (isDowned)
+            if (isDead)
                 return;
 
-            isDowned = true;
+            isDead = true;
             health = 0;
+
+            Draw();
         }
     }
 }

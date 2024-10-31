@@ -6,11 +6,17 @@ namespace Advanced_Text_Adventure
     {
         static void Main(string[] args)
         {
-            TestEnemy enemy = new(name: "ukoG");
-            Friendly player = new(name: "Lapis");
+            Console.Title = "deflector: retro";
+            Console.SetWindowSize(140, 36);
 
-            Battle testBattle = new(new Friendly[] { player }, new Enemy[] { enemy });
+            Player player = new(name: "Lapis");
+            Player.player = player;
+
+            Battle testBattle = new("Tutorial");
             testBattle.Start();
+
+            
+            
 
             /*
             Reader.WriteLine("THINK FAST!\n", 10);
