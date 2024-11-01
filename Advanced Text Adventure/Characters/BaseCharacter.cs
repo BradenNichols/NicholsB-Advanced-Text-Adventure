@@ -1,6 +1,7 @@
 ﻿using Advanced_Text_Adventure.Misc;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,12 +20,11 @@ namespace Advanced_Text_Adventure
         protected (float, float) prevPosition = (0, 0);
 
         public float speed = 1;
-
         public ConsoleColor color;
 
         public bool isDead = false;
 
-        public BaseCharacter(string name, bool isEnemy = false, float health = 100, float maxHealth = 100)
+        public BaseCharacter(string name, bool isEnemy = false, float health = 1, float maxHealth = 1)
         {
             this.name = name;
             this.isEnemy = isEnemy;
@@ -51,7 +51,7 @@ namespace Advanced_Text_Adventure
 
         public void Draw()
         {
-            if (position.Item1 != prevPosition.Item1 || position.Item2 != prevPosition.Item2)
+            if (isDead || (position.Item1 != prevPosition.Item1 || position.Item2 != prevPosition.Item2))
             {
                 Console.SetCursorPosition((int)prevPosition.Item1, (int)prevPosition.Item2);
                 Reader.Write(" ");
@@ -68,9 +68,10 @@ namespace Advanced_Text_Adventure
 
         // Damage
 
-        public void TakeDamage(float damage)
+        public void TakeDamage(int damage)
         {
             health = Math.Clamp(health - damage, 0, maxHealth);
+            Debug.Print(health.ToString());
 
             if (health <= 0)
                 Die();
@@ -85,6 +86,14 @@ namespace Advanced_Text_Adventure
             health = 0;
 
             Draw();
+        }
+
+        // Game Reset
+
+        public void Reset()
+        {
+            health = maxHealth;
+            isDead = false;
         }
     }
 }

@@ -12,22 +12,41 @@ namespace Advanced_Text_Adventure
     public abstract class Enemy : BaseCharacter
     {
         private Random random = new();
-        private (float, float) randomSpeed = (0.35f, 0.6f);
+        private (float, float) randomSpeed = (0.35f, 0.65f);
 
+        private Stopwatch watch = new();
+        private int timeToActivate;
+
+        public bool isActive = false;
         public bool isDeflected = false;
         public (float, float) deflectDirection = (0, 0);
 
         protected Enemy(string name, float health, float maxHealth) : base(name: name, isEnemy: true, health: health, maxHealth: maxHealth)
         {
-            position.Item1 = random.Next(0, Canvas.width) + Canvas.baseWidth;
-            position.Item2 = random.Next(0, Canvas.height) + Canvas.baseHeight;
+            position.Item1 = random.Next(1, Canvas.width) + Canvas.baseWidth;
+            position.Item2 = random.Next(1, Canvas.height) + Canvas.baseHeight;
 
             color = ConsoleColor.Red;
             speed = (float)random.Next((int)(randomSpeed.Item1 * 100), (int)(randomSpeed.Item2 * 100)) / 100;
+
+            timeToActivate = random.Next(500, 1100);
+        }
+
+        public void SetActive(bool isActive)
+        {
+            this.isActive = isActive;
+
+            if (isActive)
+                watch.Start();
         }
 
         public override void DoAction()
         {
+            if (watch.ElapsedMilliseconds <= timeToActivate)
+                return;
+            else
+                watch.Stop();
+
             (float, float) playerPosition = Player.player.position;
             (float, float) flooredPosition;
 
@@ -97,7 +116,7 @@ namespace Advanced_Text_Adventure
                         return;
                     }
 
-                    Player.player.Die();
+                    Player.player.TakeDamage(1);
                 }
             } else
             {
@@ -109,8 +128,12 @@ namespace Advanced_Text_Adventure
                     {
                         (float, float) enemyFloored = (MathF.Floor(enemy.position.Item1), MathF.Floor(enemy.position.Item2));
 
-                        if (enemyFloored.Equals(flooredPosition))
+                        if (MathF.Abs(enemyFloored.Item1 - flooredPosition.Item1) <= 1 && MathF.Abs(enemyFloored.Item2 - flooredPosition.Item2) <= 1)
+                        {
                             enemy.Die();
+                            Die();
+                            break;
+                        } 
                     }
                 }
             }

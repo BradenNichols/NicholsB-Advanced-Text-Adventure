@@ -11,6 +11,7 @@ namespace Advanced_Text_Adventure
     {
         public static Battle activeBattle;
         public bool isActive = false;
+        public string outcome = "";
 
         public string levelName = "";
         public List<Enemy> enemies;
@@ -28,6 +29,9 @@ namespace Advanced_Text_Adventure
             isActive = true;
             Battle.activeBattle = this;
 
+            Player.player.key = null;
+            Player.player.lastMoveKey = null;
+
             SetupLevel();
             Canvas.Draw();
 
@@ -37,9 +41,15 @@ namespace Advanced_Text_Adventure
                 Player.player.DoAction();
                 Player.player.Draw();
 
+                bool isEnemyAlive = false;
+
                 foreach (Enemy enemy in enemies)
                 {
                     if (enemy.isDead) continue;
+                    isEnemyAlive = true;
+
+                    if (Player.player.lastMoveKey != null && !enemy.isActive)
+                        enemy.SetActive(true);
 
                     enemy.DoAction();
                     enemy.Draw();
@@ -47,7 +57,7 @@ namespace Advanced_Text_Adventure
 
                 Thread.Sleep(50);
 
-                if (Player.player.isDead)
+                if (Player.player.isDead || !isEnemyAlive)
                     break;
             }
 
@@ -64,11 +74,22 @@ namespace Advanced_Text_Adventure
             Thread.Sleep(1000);
             Console.Clear();
 
+            // Battle Outcome
+
+            foreach (Enemy enemy in enemies)
+            {
+                if (!enemy.isDead)
+                    enemy.Die();
+            }
+
             if (Player.player.isDead)
             {
+                outcome = "Death";
+
                 Reader.WriteLine("you died haha", 20, ConsoleColor.Red);
                 Thread.Sleep(1500);
-            }
+            } else
+                outcome = "Win";
 
             Battle.activeBattle = null;
         }
@@ -79,7 +100,7 @@ namespace Advanced_Text_Adventure
             {
                 //enemies.Add(new TestEnemy("Goku"));
                 
-                for (int i = 0; i < new Random().Next(3, 5); i++)
+                for (int i = 0; i < new Random().Next(8, 14); i++)
                     enemies.Add(new TestEnemy("Goku"));
             }
         }

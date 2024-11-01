@@ -19,9 +19,10 @@ namespace Advanced_Text_Adventure
         public bool isDeflecting = false;
         public float deflectEnemySpeed = 1.5f;
 
+        public string lastMoveKey;
         private int deflectCount = 0;
 
-        public Player(string name, float health = 100, float maxHealth = 100) : base(name: name, isEnemy: false, health: health, maxHealth: maxHealth)
+        public Player(string name, float health = 1, float maxHealth = 2) : base(name: name, isEnemy: false, health: health, maxHealth: maxHealth)
         {
             position.Item1 = new Random().Next(0, Canvas.width) + Canvas.baseWidth;
             position.Item2 = new Random().Next(0, Canvas.height) + Canvas.baseHeight;
@@ -33,10 +34,12 @@ namespace Advanced_Text_Adventure
             if (Console.KeyAvailable)
             {
                 input = Console.ReadKey(true);
-                key = input.KeyChar.ToString().ToLower();
+                key = input.Key.ToString().ToLower();
 
                 if (key.Equals("f"))
                     Deflect();
+                else if (key.Equals("r"))
+                    Player.player.Die();
             }
         }
 
@@ -44,7 +47,7 @@ namespace Advanced_Text_Adventure
 
         public void Deflect()
         {
-            if (!canDeflect)
+            if (!canDeflect && !isDead)
                 return;
 
             int newCount = deflectCount++;
@@ -57,7 +60,7 @@ namespace Advanced_Text_Adventure
 
             Task.Run(() =>
             {
-                Thread.Sleep(550);
+                Thread.Sleep(450);
 
                 isDeflecting = false;
                 color = ConsoleColor.Green;
@@ -76,51 +79,63 @@ namespace Advanced_Text_Adventure
             canDeflect = true;
 
             enemy.isDeflected = true;
+            enemy.color = ConsoleColor.Blue;
             enemy.deflectDirection = (0, 0);
 
             // Horizontal
 
-            if (key.Equals("a"))
+            if (key.Equals("leftarrow"))
                 enemy.deflectDirection.Item1 -= deflectEnemySpeed;
-            if (key.Equals("d"))
+            if (key.Equals("rightarrow"))
                 enemy.deflectDirection.Item1 += deflectEnemySpeed;
 
             // Vertical
 
-            if (key.Equals("w"))
+            if (key.Equals("uparrow"))
                 enemy.deflectDirection.Item2 -= deflectEnemySpeed;
-            if (key.Equals("s"))
+            if (key.Equals("downarrow"))
                 enemy.deflectDirection.Item2 += deflectEnemySpeed;
 
             // Backup
 
             if (enemy.deflectDirection.Item1 == 0 && enemy.deflectDirection.Item2 == 0)
-                enemy.deflectDirection.Item2 += deflectEnemySpeed;
+            {
+                if (lastMoveKey.Equals("leftarrow"))
+                    enemy.deflectDirection.Item1 -= deflectEnemySpeed;
+                else if (lastMoveKey.Equals("rightarrow"))
+                    enemy.deflectDirection.Item1 += deflectEnemySpeed;
+                else if (lastMoveKey.Equals("uparrow"))
+                    enemy.deflectDirection.Item2 -= deflectEnemySpeed;
+                else // downarrow
+                    enemy.deflectDirection.Item2 += deflectEnemySpeed;
+            }
         }
 
         // Loop Stuff
 
         public override void DoAction()
         {
-            /*
-            if (Console.KeyAvailable)
-                input = Console.ReadKey(true);*/
-
             if (key != null && !isDeflecting)
             {
-                // Horizontal
-
-                if (key.Equals("a"))
+                // Movement
+                
+                if (key.Equals("leftarrow"))
+                {
                     position.Item1 -= speed;
-                if (key.Equals("d"))
+                    lastMoveKey = "leftarrow";
+                } else if (key.Equals("rightarrow"))
+                {
                     position.Item1 += speed;
-
-                // Vertical
-
-                if (key.Equals("w"))
+                    lastMoveKey = "rightarrow";
+                } else if (key.Equals("uparrow"))
+                {
                     position.Item2 -= speed;
-                if (key.Equals("s"))
+                    lastMoveKey = "uparrow";
+                } else if (key.Equals("downarrow"))
+                {
                     position.Item2 += speed;
+                    lastMoveKey = "downarrow";
+                }
             }
 
             ClampPosition();

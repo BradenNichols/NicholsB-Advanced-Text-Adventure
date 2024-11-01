@@ -2,7 +2,7 @@
 
 namespace Advanced_Text_Adventure
 {
-    internal class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -12,11 +12,7 @@ namespace Advanced_Text_Adventure
             Player player = new(name: "Lapis");
             Player.player = player;
 
-            Battle testBattle = new("Tutorial");
-            testBattle.Start();
-
-            
-            
+            StartGame();
 
             /*
             Reader.WriteLine("THINK FAST!\n", 10);
@@ -26,6 +22,33 @@ namespace Advanced_Text_Adventure
                 Reader.WriteLine("PARRY!", 60, ConsoleColor.Green);
             else
                 Reader.WriteLine("EXPLODEEEEEEEEEEEEEEEEEEEEEEEE", 80, ConsoleColor.Red);*/
+        }
+
+        public static void StartGame()
+        {
+            Player.player.Reset();
+
+            Battle testBattle = new("Tutorial");
+            testBattle.Start();
+
+            if (testBattle.outcome == "Death")
+            {
+                Retry();
+                return;
+            }
+
+            Reader.WriteLine("you win!!!", 20, ConsoleColor.Green);
+            Thread.Sleep(2000);
+
+            Retry();
+        }
+
+        public static void Retry()
+        {
+            Reader.WriteLine("\npress enter to retry..", 25);
+            Reader.ReadLine();
+
+            StartGame();
         }
     }
 }
