@@ -29,7 +29,7 @@ namespace Advanced_Text_Adventure
             color = ConsoleColor.Red;
             speed = (float)random.Next((int)(randomSpeed.Item1 * 100), (int)(randomSpeed.Item2 * 100)) / 100;
 
-            timeToActivate = random.Next(500, 1100);
+            timeToActivate = random.Next(400, 800);
         }
 
         public void SetActive(bool isActive)

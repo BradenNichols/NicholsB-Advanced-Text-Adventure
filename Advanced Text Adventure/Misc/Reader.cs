@@ -19,8 +19,63 @@ namespace Advanced_Text_Adventure
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool CancelIoEx(IntPtr handle, IntPtr lpOverlapped);
 
-        // Write
+        // Choice
 
+        public static string GetNameOfT<T>(T thing)
+        {
+            string name = "";
+
+           /* if (thing is Entity)
+                name = (thing as Entity).name;
+            else if (thing is Move)
+                name = (thing as Move).name;
+            else if (thing is Item)
+                name = (thing as Item).name;
+            else*/ if (thing is string)
+                name = (string)(object)thing;
+
+            return name;
+        }
+
+        public static T ChooseSomething<T>(List<T> choices, bool printClass = false, bool canExit = false)
+        {
+            foreach (T action in choices)
+            {
+                if (printClass == true)
+                    Console.WriteLine(action);
+                else
+                    Console.WriteLine(GetNameOfT<T>(action));
+            }
+
+            if (canExit == true)
+                Console.WriteLine("Exit");
+
+            Write("Input: ", color: ConsoleColor.DarkGray);
+
+            while (true)
+            {
+                string choice = ReadLine();
+
+                if (canExit && choice.ToLower().Contains("exit"))
+                    return default;
+
+                foreach (T action in choices)
+                {
+                    string name = GetNameOfT<T>(action);
+
+                    if (name.ToLower().Contains(choice.ToLower()))
+                    {
+                        WriteLine("");
+                        return action;
+                    }
+                }
+
+                WriteLine("Not a valid choice. Please pick again.");
+                Write("Input: ", color: ConsoleColor.DarkGray);
+            }
+        }
+
+        // Write
         public static void WriteLine(string line, int typeMS = -1, ConsoleColor color = ConsoleColor.White)
         {
             Console.ForegroundColor = color;

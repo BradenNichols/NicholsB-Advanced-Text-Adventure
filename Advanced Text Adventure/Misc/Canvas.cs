@@ -57,10 +57,21 @@ namespace Advanced_Text_Adventure.Misc
 
             // Special
 
-            Console.SetCursorPosition(baseWidth + width + 20, baseHeight + (height / 2));
+            Console.SetCursorPosition(baseWidth + width + 20, baseHeight + 13);
             Reader.Write("Deflector: Retro", -1, ConsoleColor.Blue);
-            Console.SetCursorPosition(baseWidth + width + 13, baseHeight + (height / 2) + 1);
+            Console.SetCursorPosition(baseWidth + width + 13, baseHeight + 14);
             Reader.Write("the besterest game of all time", -1, ConsoleColor.DarkBlue);
+
+            // Controls
+
+            Console.SetCursorPosition(baseWidth + width + 7, baseHeight + 17);
+            Reader.Write("Controls:", -1, ConsoleColor.DarkGray);
+
+            Console.SetCursorPosition(baseWidth + width + 7, baseHeight + 18);
+            Reader.Write("-> Arrow keys to move & deflect direction.", -1, ConsoleColor.Gray);
+
+            Console.SetCursorPosition(baseWidth + width + 7, baseHeight + 19);
+            Reader.Write("-> F to Deflect.", -1, ConsoleColor.Gray);
         }
     }
 }

@@ -15,11 +15,13 @@ namespace Advanced_Text_Adventure
 
         public string levelName = "";
         public List<Enemy> enemies;
+        public List<BaseCharacter> otherCharacters;
         
         public Battle(string levelName)
         {
             this.levelName = levelName;
             enemies = new List<Enemy>();
+            otherCharacters = new List<BaseCharacter>();
         }
 
         // Main
@@ -42,6 +44,14 @@ namespace Advanced_Text_Adventure
                 Player.player.Draw();
 
                 bool isEnemyAlive = false;
+
+                foreach (BaseCharacter character in otherCharacters)
+                {
+                    if (character.isDead) continue;
+
+                    character.DoAction();
+                    character.Draw();
+                }
 
                 foreach (Enemy enemy in enemies)
                 {
@@ -71,8 +81,7 @@ namespace Advanced_Text_Adventure
 
             isActive = false;
 
-            Thread.Sleep(1000);
-            Console.Clear();
+            Thread.Sleep(850);
 
             // Battle Outcome
 
@@ -82,12 +91,14 @@ namespace Advanced_Text_Adventure
                     enemy.Die();
             }
 
+            Console.Clear();
+
             if (Player.player.isDead)
             {
                 outcome = "Death";
 
-                Reader.WriteLine("you died haha", 20, ConsoleColor.Red);
-                Thread.Sleep(1500);
+                Reader.WriteLine("you died...", 25, ConsoleColor.Red);
+                Thread.Sleep(750);
             } else
                 outcome = "Win";
 

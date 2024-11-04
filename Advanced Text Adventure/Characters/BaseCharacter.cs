@@ -21,6 +21,7 @@ namespace Advanced_Text_Adventure
 
         public float speed = 1;
         public ConsoleColor color;
+        public string image = "█";
 
         public bool isDead = false;
 
@@ -62,7 +63,7 @@ namespace Advanced_Text_Adventure
                 Console.SetCursorPosition((int)position.Item1, (int)position.Item2);
                 prevPosition = (position.Item1, position.Item2);
 
-                Reader.Write("█", -1, color);
+                Reader.Write(image, -1, color);
             }
         }
 

@@ -15,7 +15,11 @@ namespace Advanced_Text_Adventure
         public ConsoleKeyInfo input = new();
         public string key;
 
-        public bool canDeflect = true;
+        public bool canShoot = true;
+        public bool isShooting = false;
+        public float bulletSpeed = 1.5f;
+
+        public bool canDeflect = false;
         public bool isDeflecting = false;
         public float deflectEnemySpeed = 1.5f;
 
@@ -47,7 +51,7 @@ namespace Advanced_Text_Adventure
 
         public void Deflect()
         {
-            if (!canDeflect && !isDead)
+            if (!canDeflect || isDead)
                 return;
 
             int newCount = deflectCount++;
@@ -72,6 +76,30 @@ namespace Advanced_Text_Adventure
 
                 canDeflect = true;
             });
+        }
+
+        public void Shoot()
+        {
+            if (!canShoot || isDead) return;
+
+            (float, float) shootDirection = (0, 0);
+
+            // Horizontal
+
+            if (key.Equals("leftarrow"))
+                shootDirection.Item1 -= bulletSpeed;
+            if (key.Equals("rightarrow"))
+                shootDirection.Item1 += bulletSpeed;
+
+            // Vertical
+
+            if (key.Equals("uparrow"))
+                shootDirection.Item2 -= bulletSpeed;
+            if (key.Equals("downarrow"))
+                shootDirection.Item2 += bulletSpeed;
+
+            Bullet newBullet = new(this.position, shootDirection);
+            Battle.activeBattle.otherCharacters.Add(newBullet);
         }
 
         public void DeflectEnemy(Enemy enemy)
