@@ -1,6 +1,7 @@
 ﻿using Advanced_Text_Adventure.Misc;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,8 +32,7 @@ namespace Advanced_Text_Adventure
             isActive = true;
             Battle.activeBattle = this;
 
-            Player.player.key = null;
-            Player.player.lastMoveKey = null;
+            Player.player.Reset();
 
             SetupLevel();
             Canvas.Draw();
@@ -41,7 +41,6 @@ namespace Advanced_Text_Adventure
             {
                 Player.player.Input();
                 Player.player.DoAction();
-                Player.player.Draw();
 
                 bool isEnemyAlive = false;
 
@@ -53,12 +52,14 @@ namespace Advanced_Text_Adventure
                     character.Draw();
                 }
 
+                Player.player.Draw();
+
                 foreach (Enemy enemy in enemies)
                 {
                     if (enemy.isDead) continue;
                     isEnemyAlive = true;
 
-                    if (Player.player.lastMoveKey != null && !enemy.isActive)
+                    if (Player.player.hasMoved && !enemy.isActive)
                         enemy.SetActive(true);
 
                     enemy.DoAction();
@@ -97,7 +98,7 @@ namespace Advanced_Text_Adventure
             {
                 outcome = "Death";
 
-                Reader.WriteLine("you died...", 25, ConsoleColor.Red);
+                Reader.WriteLine("You died at " + levelName + "...", 40, ConsoleColor.Red);
                 Thread.Sleep(750);
             } else
                 outcome = "Win";
@@ -109,9 +110,13 @@ namespace Advanced_Text_Adventure
         {
             if (levelName == "Tutorial")
             {
-                //enemies.Add(new TestEnemy("Goku"));
-                
-                for (int i = 0; i < new Random().Next(8, 14); i++)
+                for (int i = 0; i < 4; i++)
+                    enemies.Add(new TestEnemy("Goku"));
+            } else if (levelName.Contains("Level"))
+            {
+                int levelNumber = Convert.ToInt32(levelName.Split("Level ")[1]);
+
+                for (int i = 0; i < new Random().Next(5, 8) + levelNumber; i++)
                     enemies.Add(new TestEnemy("Goku"));
             }
         }

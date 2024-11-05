@@ -6,30 +6,20 @@ namespace Advanced_Text_Adventure
     {
         static void Main(string[] args)
         {
-            Console.Title = "Deflector: Retro";
+            Console.Title = "John Deflector Adventures";
             Console.SetWindowSize(140, 36);
 
             Player player = new(name: "Lapis");
             Player.player = player;
 
             // Title
-
             TitleScreen();
-
-            /*
-            Reader.WriteLine("THINK FAST!\n", 10);
-            ConsoleKeyInfo keyResult = Reader.ReadTimed(500);
-
-            if (keyResult.Key != ConsoleKey.None)
-                Reader.WriteLine("PARRY!", 60, ConsoleColor.Green);
-            else
-                Reader.WriteLine("EXPLODEEEEEEEEEEEEEEEEEEEEEEEE", 80, ConsoleColor.Red);*/
         }
 
         public static void TitleScreen()
         {
-            Reader.WriteLine("Deflector: Retro", 55, ConsoleColor.Blue);
-            Thread.Sleep(750);
+            Reader.WriteLine("John Deflector Adventures", 45, ConsoleColor.Blue);
+            Thread.Sleep(600);
 
             List<string> choices = new();
             choices.Add("1) How to Play?");
@@ -70,7 +60,7 @@ namespace Advanced_Text_Adventure
                     Reader.ReadLine();
                 } else if (result.Contains("2)"))
                 {
-                    Reader.WriteLine("deflecting time...", 35, ConsoleColor.Green);
+                    Reader.WriteLine("Shootin' time..", 35, ConsoleColor.Green);
                     Thread.Sleep(500);
 
                     StartGame();
@@ -92,15 +82,39 @@ namespace Advanced_Text_Adventure
                 return;
             }
 
-            Reader.WriteLine("you win!!!", 20, ConsoleColor.Green);
-            Thread.Sleep(1500);
+            int levelNumber = 1;
+            bool hasWon = false;
 
-            Retry();
+            while (true)
+            {
+                Battle newBattle = new("Level " + levelNumber.ToString());
+                newBattle.Start();
+
+                if (newBattle.outcome == "Death")
+                {
+                    Retry();
+                    break;
+                }
+
+                levelNumber++;
+
+                if (levelNumber > 10)
+                {
+                    hasWon = true;
+                    break;
+                }
+            }
+
+            if (hasWon)
+            {
+                Reader.WriteLine("You Win!!!!!", 45, ConsoleColor.Green);
+                Thread.Sleep(2500);
+            }
         }
 
         public static void Retry()
         {
-            Reader.WriteLine("\npress enter to retry..\n", 25);
+            Reader.WriteLine("\nPress enter to retry..\n", 25);
             Reader.ReadLine();
 
             StartGame();

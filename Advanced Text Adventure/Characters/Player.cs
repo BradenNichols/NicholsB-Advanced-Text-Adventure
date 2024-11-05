@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Advanced_Text_Adventure
 {
@@ -17,14 +18,10 @@ namespace Advanced_Text_Adventure
 
         public bool canShoot = true;
         public bool isShooting = false;
-        public float bulletSpeed = 1.5f;
+        public float bulletSpeed = 1f;
 
-        public bool canDeflect = false;
-        public bool isDeflecting = false;
-        public float deflectEnemySpeed = 1.5f;
-
-        public string lastMoveKey;
-        private int deflectCount = 0;
+        public string lastMoveKey = "downarrow";
+        public bool hasMoved = false;
 
         public Player(string name, float health = 1, float maxHealth = 2) : base(name: name, isEnemy: false, health: health, maxHealth: maxHealth)
         {
@@ -41,109 +38,93 @@ namespace Advanced_Text_Adventure
                 key = input.Key.ToString().ToLower();
 
                 if (key.Equals("f"))
-                    Deflect();
+                    Shoot();
                 else if (key.Equals("r"))
                     Player.player.Die();
             }
         }
 
-        // Deflect
-
-        public void Deflect()
+        bool isInput(string keyName)
         {
-            if (!canDeflect || isDead)
-                return;
+            if (key == null) return false;
 
-            int newCount = deflectCount++;
-            deflectCount = newCount;
+            if (key.Equals("leftarrow"))
+                return true;
+            else if (key.Equals("rightarrow"))
+                return true;
+            else if (key.Equals("uparrow"))
+                return true;
+            else if (key.Equals("downarrow"))
+                return true;
 
-            canDeflect = false;
-            isDeflecting = true;
-
-            color = ConsoleColor.DarkYellow;
-
-            Task.Run(() =>
-            {
-                Thread.Sleep(450);
-
-                isDeflecting = false;
-                color = ConsoleColor.Green;
-
-                Thread.Sleep(650);
-
-                if (deflectCount != newCount)
-                    return;
-
-                canDeflect = true;
-            });
+            return false;
         }
+
+        public void Reset()
+        {
+            base.Reset();
+
+            key = null;
+            lastMoveKey = "downarrow";
+            hasMoved = false;
+        }
+
+        // Gun
 
         public void Shoot()
         {
-            if (!canShoot || isDead) return;
+            if (!canShoot || isDead || !hasMoved) return;
+
+            canShoot = false;
+            Task.Delay(350).ContinueWith(_ => {canShoot = true;});
 
             (float, float) shootDirection = (0, 0);
 
-            // Horizontal
+            string currentKey = key;
+            string image = "";
 
-            if (key.Equals("leftarrow"))
+            if (!isInput(currentKey))
+                currentKey = lastMoveKey;
+
+            switch (currentKey) {
+                case "leftarrow":
+                    shootDirection.Item1 -= bulletSpeed;
+                    image = "<";
+                    break;
+                case "rightarrow":
+                    shootDirection.Item1 += bulletSpeed;
+                    image = ">";
+                    break;
+                case "uparrow":
+                    shootDirection.Item2 -= bulletSpeed;
+                    image = "▲";
+                    break;
+                default:
+                    shootDirection.Item2 += bulletSpeed;
+                    image = "▼";
+                    break;
+            }
+
+            if (currentKey.Equals("leftarrow"))
                 shootDirection.Item1 -= bulletSpeed;
-            if (key.Equals("rightarrow"))
+            else if (currentKey.Equals("rightarrow"))
                 shootDirection.Item1 += bulletSpeed;
-
-            // Vertical
-
-            if (key.Equals("uparrow"))
+            else if (currentKey.Equals("uparrow"))
                 shootDirection.Item2 -= bulletSpeed;
-            if (key.Equals("downarrow"))
+            else // downarrow
                 shootDirection.Item2 += bulletSpeed;
 
-            Bullet newBullet = new(this.position, shootDirection);
+            Bullet newBullet = new(position, shootDirection);
+            newBullet.image = image;
+
             Battle.activeBattle.otherCharacters.Add(newBullet);
-        }
-
-        public void DeflectEnemy(Enemy enemy)
-        {
-            canDeflect = true;
-
-            enemy.isDeflected = true;
-            enemy.color = ConsoleColor.Blue;
-            enemy.deflectDirection = (0, 0);
-
-            // Horizontal
-
-            if (key.Equals("leftarrow"))
-                enemy.deflectDirection.Item1 -= deflectEnemySpeed;
-            if (key.Equals("rightarrow"))
-                enemy.deflectDirection.Item1 += deflectEnemySpeed;
-
-            // Vertical
-
-            if (key.Equals("uparrow"))
-                enemy.deflectDirection.Item2 -= deflectEnemySpeed;
-            if (key.Equals("downarrow"))
-                enemy.deflectDirection.Item2 += deflectEnemySpeed;
-
-            // Backup
-
-            if (enemy.deflectDirection.Item1 == 0 && enemy.deflectDirection.Item2 == 0)
-            {
-                if (lastMoveKey.Equals("leftarrow"))
-                    enemy.deflectDirection.Item1 -= deflectEnemySpeed;
-                else if (lastMoveKey.Equals("rightarrow"))
-                    enemy.deflectDirection.Item1 += deflectEnemySpeed;
-                else if (lastMoveKey.Equals("uparrow"))
-                    enemy.deflectDirection.Item2 -= deflectEnemySpeed;
-                else // downarrow
-                    enemy.deflectDirection.Item2 += deflectEnemySpeed;
-            }
         }
 
         // Loop Stuff
 
         public override void DoAction()
         {
-            if (key != null && !isDeflecting)
+            if (key != null)
             {
                 // Movement
                 
@@ -151,18 +132,22 @@ namespace Advanced_Text_Adventure
                 {
                     position.Item1 -= speed;
                     lastMoveKey = "leftarrow";
+                    hasMoved = true;
                 } else if (key.Equals("rightarrow"))
                 {
                     position.Item1 += speed;
                     lastMoveKey = "rightarrow";
+                    hasMoved = true;
                 } else if (key.Equals("uparrow"))
                 {
                     position.Item2 -= speed;
                     lastMoveKey = "uparrow";
+                    hasMoved = true;
                 } else if (key.Equals("downarrow"))
                 {
                     position.Item2 += speed;
                     lastMoveKey = "downarrow";
+                    hasMoved = true;
                 }
             }
 

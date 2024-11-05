@@ -18,7 +18,6 @@ namespace Advanced_Text_Adventure
         private int timeToActivate;
 
         public bool isActive = false;
-        public bool isDeflected = false;
         public (float, float) deflectDirection = (0, 0);
 
         protected Enemy(string name, float health, float maxHealth) : base(name: name, isEnemy: true, health: health, maxHealth: maxHealth)
@@ -50,92 +49,54 @@ namespace Advanced_Text_Adventure
             (float, float) playerPosition = Player.player.position;
             (float, float) flooredPosition;
 
-            if (!isDeflected)
-            {
-                // Path to player
+            // Path to player
 
-                flooredPosition = (MathF.Floor(position.Item1), MathF.Floor(position.Item2));
+            flooredPosition = (MathF.Floor(position.Item1), MathF.Floor(position.Item2));
 
-                if (playerPosition.Item2 < flooredPosition.Item2)
-                    position.Item2 -= speed;
-                else if (playerPosition.Item2 > flooredPosition.Item2)
-                    position.Item2 += speed;
+            if (playerPosition.Item2 < flooredPosition.Item2)
+                position.Item2 -= speed;
+            else if (playerPosition.Item2 > flooredPosition.Item2)
+                position.Item2 += speed;
 
-                if (playerPosition.Item1 < flooredPosition.Item1)
-                    position.Item1 -= speed;
-                else if (playerPosition.Item1 > flooredPosition.Item1)
-                    position.Item1 += speed;
-            } else
-            {
-                // Move in deflect direction
-
-                position.Item1 += deflectDirection.Item1;
-                position.Item2 += deflectDirection.Item2;
-            }
-
+            if (playerPosition.Item1 < flooredPosition.Item1)
+                position.Item1 -= speed;
+            else if (playerPosition.Item1 > flooredPosition.Item1)
+                position.Item1 += speed;
 
             // Clamp
 
             bool isOnMapBounds = ClampPosition();
 
-            if (!isOnMapBounds && isDeflected)
+            /*
+            if (!isOnMapBounds)
             {
                 Die();
                 return;
-            }
+            }*/
 
             flooredPosition = (MathF.Floor(position.Item1), MathF.Floor(position.Item2));
 
-            // Check collision
+            // Check enemy collision
 
-            if (!isDeflected)
+            foreach (Enemy enemy in Battle.activeBattle.enemies)
             {
-                // Check between enemies
-
-                foreach (Enemy enemy in Battle.activeBattle.enemies)
+                if (enemy != this && !enemy.isDead)
                 {
-                    if (enemy != this && !enemy.isDead)
-                    {
-                        (float, float) enemyFloored = (MathF.Floor(enemy.position.Item1), MathF.Floor(enemy.position.Item2));
+                    (float, float) enemyFloored = (MathF.Floor(enemy.position.Item1), MathF.Floor(enemy.position.Item2));
 
-                        if (enemyFloored.Equals(flooredPosition))
-                        {
-                            position = prevPosition;
-                            break;
-                        }
+                    if (enemyFloored.Equals(flooredPosition))
+                    {
+                        position = prevPosition;
+                        break;
                     }
                 }
+            }
 
-                if (playerPosition.Item1 == flooredPosition.Item1 && playerPosition.Item2 == flooredPosition.Item2)
-                {
-                    // Hit player
-
-                    if (Player.player.isDeflecting)
-                    {
-                        Player.player.DeflectEnemy(this);
-                        return;
-                    }
-
-                    Player.player.TakeDamage(1);
-                }
-            } else
+            if (playerPosition.Item1 == flooredPosition.Item1 && playerPosition.Item2 == flooredPosition.Item2)
             {
-                // Hit enemies
+                // Hit player
 
-                foreach (Enemy enemy in Battle.activeBattle.enemies)
-                {
-                    if (enemy != this && !enemy.isDead)
-                    {
-                        (float, float) enemyFloored = (MathF.Floor(enemy.position.Item1), MathF.Floor(enemy.position.Item2));
-
-                        if (MathF.Abs(enemyFloored.Item1 - flooredPosition.Item1) <= 1 && MathF.Abs(enemyFloored.Item2 - flooredPosition.Item2) <= 1)
-                        {
-                            enemy.Die();
-                            Die();
-                            break;
-                        } 
-                    }
-                }
+                Player.player.TakeDamage(1);
             }
         }
     }

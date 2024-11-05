@@ -25,13 +25,9 @@ namespace Advanced_Text_Adventure
         {
             string name = "";
 
-           /* if (thing is Entity)
-                name = (thing as Entity).name;
-            else if (thing is Move)
-                name = (thing as Move).name;
-            else if (thing is Item)
-                name = (thing as Item).name;
-            else*/ if (thing is string)
+            if (thing is BaseCharacter)
+                 name = (thing as BaseCharacter).name;
+            else if (thing is string)
                 name = (string)(object)thing;
 
             return name;

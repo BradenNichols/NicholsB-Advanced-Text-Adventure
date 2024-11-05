@@ -20,7 +20,7 @@ namespace Advanced_Text_Adventure
         protected (float, float) prevPosition = (0, 0);
 
         public float speed = 1;
-        public ConsoleColor color;
+        public ConsoleColor color = ConsoleColor.White;
         public string image = "█";
 
         public bool isDead = false;
