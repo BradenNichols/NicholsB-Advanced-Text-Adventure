@@ -1,9 +1,13 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace Advanced_Text_Adventure
 {
     public class Program
     {
+        public static SaveData mySave;
+        static string saveJson;
+
         static void Main(string[] args)
         {
             Console.Title = "John Deflector Adventures";
@@ -18,14 +22,15 @@ namespace Advanced_Text_Adventure
 
         public static void TitleScreen()
         {
-            Reader.WriteLine("John Deflector Adventures", 45, ConsoleColor.Blue);
+            Reader.WriteLine("John Deflector Adventures", 30, ConsoleColor.Blue);
             Thread.Sleep(600);
 
-            List<string> choices = new();
-            choices.Add("1) How to Play?");
-            choices.Add("2) New Game");
+            List<string> saveChoices = new() { "1) Continue", "2) Return to Title Screen" };
 
-            if (true)
+            List<string> choices = new() { "1) How to Play?", "2) New Game" };
+            bool hasSave = LoadData();
+
+            if (hasSave && mySave.canLoad)
                 choices.Add("3) Load Save");
 
             bool firstChoice = true;
@@ -35,7 +40,7 @@ namespace Advanced_Text_Adventure
                 if (!firstChoice)
                 {
                     Console.Clear();
-                    Reader.WriteLine("\nDeflector: Retro", color: ConsoleColor.Blue);
+                    Reader.WriteLine("\nJohn Deflector Adventures", color: ConsoleColor.Blue);
                 }
                 else
                     firstChoice = false;
@@ -65,24 +70,47 @@ namespace Advanced_Text_Adventure
 
                     StartGame();
                     break;
+                } else if (result.Contains("3)"))
+                {
+                    PrintSave();
+                    Thread.Sleep(2000);
+
+                    Reader.WriteLine("\n");
+                    string saveResult = Reader.ChooseSomething(saveChoices);
+
+                    if (saveResult.Contains("1)"))
+                    {
+                        Reader.WriteLine("Shootin' time..", 35, ConsoleColor.Green);
+                        Thread.Sleep(500);
+
+                        StartGame(useSave: true);
+                        break;
+                    }
                 }
             }
         }
 
-        public static void StartGame()
+        public static void StartGame(bool useSave = false, bool skipTutorial = false)
         {
             Player.player.Reset();
 
-            Battle testBattle = new("Tutorial");
-            testBattle.Start();
+            int levelNumber = 1;
 
-            if (testBattle.outcome == "Death")
+            if (!useSave || skipTutorial)
             {
-                Retry();
-                return;
+                Battle testBattle = new("Tutorial");
+                testBattle.Start();
+
+                if (testBattle.outcome == "Death")
+                {
+                    Retry();
+                    return;
+                }
+            } else if (useSave)
+            {
+                levelNumber = mySave.level;
             }
 
-            int levelNumber = 1;
             bool hasWon = false;
 
             while (true)
@@ -92,11 +120,18 @@ namespace Advanced_Text_Adventure
 
                 if (newBattle.outcome == "Death")
                 {
+                    mySave.canLoad = false;
+                    SaveData();
+
                     Retry();
                     break;
                 }
 
                 levelNumber++;
+
+                mySave.level = levelNumber;
+                mySave.canLoad = true;
+                SaveData();
 
                 if (levelNumber > 10)
                 {
@@ -114,10 +149,48 @@ namespace Advanced_Text_Adventure
 
         public static void Retry()
         {
-            Reader.WriteLine("\nPress enter to retry..\n", 25);
-            Reader.ReadLine();
+            List<string> choices = new() { "1) Retry", "2) Return to Title Screen" };
 
-            StartGame();
+            Reader.WriteLine("\n");
+            string result = Reader.ChooseSomething<string>(choices);
+
+            if (result.Contains("1)"))
+                StartGame(skipTutorial: true);
+            else
+                TitleScreen();
+        }
+
+        // File I/O
+
+        static JsonSerializerOptions options = new() { IncludeFields = true, WriteIndented = true };
+
+        public static bool LoadData()
+        {
+            if (!File.Exists("saveData.json"))
+                return false;
+
+            using StreamReader reader = new("saveData.json");
+            saveJson = reader.ReadToEnd();
+
+            mySave = JsonSerializer.Deserialize<SaveData>(saveJson, options);
+            return true;
+        }
+
+        public static void SaveData()
+        {
+            string serializedData = JsonSerializer.Serialize(mySave, options);
+            saveJson = serializedData;
+
+            using StreamWriter writer = new("saveData.json"); // "using" will de-allocate resources when not in use
+            writer.Write(serializedData);
+            writer.Flush();
+        }
+
+        public static void PrintSave()
+        {
+            Reader.WriteLine("-- Save Data --\n", 45, ConsoleColor.Gray);
+            Thread.Sleep(400);
+            Reader.Write("Level: " + mySave.level.ToString(), 65, ConsoleColor.DarkGreen);
         }
     }
 }
