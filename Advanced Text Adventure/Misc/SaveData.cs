@@ -12,7 +12,10 @@ namespace Advanced_Text_Adventure
     [Serializable]
     public struct SaveData
     {
-         [JsonInclude] public int level;
-         [JsonInclude] public bool canLoad;
+        [JsonInclude] public bool canLoad;
+        [JsonInclude] public int saveDataVersion;
+
+        [JsonInclude] public int level;
+        [JsonInclude] public int shopPoints;
     }
 }

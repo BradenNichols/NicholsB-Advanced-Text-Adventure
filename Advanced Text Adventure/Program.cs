@@ -5,8 +5,10 @@ namespace Advanced_Text_Adventure
 {
     public class Program
     {
-        public static SaveData mySave;
+        public static SaveData mySave = new();
         static string saveJson;
+
+        static int saveDataVersion = 1; // change this for breaking save data changes
 
         static void Main(string[] args)
         {
@@ -22,15 +24,16 @@ namespace Advanced_Text_Adventure
 
         public static void TitleScreen()
         {
+            Console.Clear();
             Reader.WriteLine("John Deflector Adventures", 30, ConsoleColor.Blue);
             Thread.Sleep(600);
 
             List<string> saveChoices = new() { "1) Continue", "2) Return to Title Screen" };
 
             List<string> choices = new() { "1) How to Play?", "2) New Game" };
-            bool hasSave = LoadData();
+            LoadData();
 
-            if (hasSave && mySave.canLoad)
+            if (mySave.canLoad && mySave.level > 0 && mySave.saveDataVersion == saveDataVersion)
                 choices.Add("3) Load Save");
 
             bool firstChoice = true;
@@ -51,13 +54,13 @@ namespace Advanced_Text_Adventure
 
                 if (result.Contains("1)"))
                 {
-                    Reader.WriteLine("Deflect enemies to their death.", 50, ConsoleColor.Green);
+                    Reader.WriteLine("Shoot enemies and buy upgrades in-between levels.", 50, ConsoleColor.Green);
                     Thread.Sleep(1000);
 
                     Reader.WriteLine("-> Arrow keys to move.", 60);
 
                     Thread.Sleep(1250);
-                    Reader.WriteLine("-> F to Deflect: move to change direction of deflect.", 60);
+                    Reader.WriteLine("-> F to Shoot in move direction.", 60);
 
                     Thread.Sleep(2500);
 
@@ -73,7 +76,7 @@ namespace Advanced_Text_Adventure
                 } else if (result.Contains("3)"))
                 {
                     PrintSave();
-                    Thread.Sleep(2000);
+                    Thread.Sleep(750);
 
                     Reader.WriteLine("\n");
                     string saveResult = Reader.ChooseSomething(saveChoices);
@@ -94,60 +97,119 @@ namespace Advanced_Text_Adventure
         {
             Player.player.Reset();
 
-            int levelNumber = 1;
-
-            if (!useSave || skipTutorial)
+            if (!useSave && !skipTutorial)
             {
-                Battle testBattle = new("Tutorial");
-                testBattle.Start();
+                ResetSave();
 
-                if (testBattle.outcome == "Death")
+                while (true)
                 {
-                    Retry();
-                    return;
+                    Battle testBattle = new("Tutorial");
+                    testBattle.Start();
+
+                    if (testBattle.outcome == "Win")
+                        break;
                 }
+
+                mySave.level = 1;
             } else if (useSave)
-            {
-                levelNumber = mySave.level;
-            }
+                PreLevel();
 
             bool hasWon = false;
 
             while (true)
             {
-                Battle newBattle = new("Level " + levelNumber.ToString());
+                Battle newBattle = new("Level " + mySave.level.ToString());
                 newBattle.Start();
 
                 if (newBattle.outcome == "Death")
                 {
-                    mySave.canLoad = false;
-                    SaveData();
-
                     Retry();
                     break;
                 }
 
-                levelNumber++;
+                mySave.level++;
 
-                mySave.level = levelNumber;
-                mySave.canLoad = true;
+                if (mySave.level <= 3)
+                    mySave.shopPoints++;
+                else
+                    mySave.shopPoints += 2;
+
                 SaveData();
 
-                if (levelNumber > 10)
+                if (mySave.level > 10)
                 {
                     hasWon = true;
                     break;
-                }
+                } else
+                {
+                    bool shouldBreak = PreLevel();
+
+                    if (shouldBreak)
+                        break;
+                }   
             }
 
             if (hasWon)
             {
-                Reader.WriteLine("You Win!!!!!", 45, ConsoleColor.Green);
+                Reader.WriteLine("You Win!!!!!\n", 45, ConsoleColor.Green);
                 Thread.Sleep(2500);
             }
         }
 
-        public static void Retry()
+        public static bool PreLevel()
+        {
+            Console.Clear();
+            Reader.WriteLine($"Level {mySave.level} Intermission", 30, ConsoleColor.Blue);
+
+            //List<string> saveChoices = new() { "1) Continue", "2) Return to Title Screen" };
+
+            List<string> choices = new() { "1) Continue Game", $"2) Shop (${mySave.shopPoints})", "3) Title Screen" };
+
+            bool firstChoice = true;
+            bool shouldBreak = false;
+
+            while (true)
+            {
+                if (!firstChoice)
+                {
+                    Console.Clear();
+                    Reader.WriteLine($"Level {mySave.level} Intermission", color: ConsoleColor.Blue);
+                }
+                else
+                    firstChoice = false;
+
+                Reader.WriteLine("\n");
+
+                string result = Reader.ChooseSomething(choices);
+
+                if (result.Contains("1)")) // continue
+                {
+                    break;
+                }
+                else if (result.Contains("2)")) // shop
+                {
+                    Console.Clear();
+
+                    Reader.WriteLine("Pre-Level Shop", color: ConsoleColor.Gray);
+                    Reader.WriteLine($"{mySave.shopPoints} Derek Dollars", 30, ConsoleColor.Green);
+
+                    Thread.Sleep(2500);
+
+                    SaveData();
+                    choices[1] = $"2) Shop (${mySave.shopPoints})";
+                }
+                else if (result.Contains("3)")) // title screen
+                {
+                    TitleScreen();
+                    shouldBreak = true;
+                    break;
+                }
+            }
+
+            return shouldBreak;
+        }
+
+        static void Retry()
         {
             List<string> choices = new() { "1) Retry", "2) Return to Title Screen" };
 
@@ -164,20 +226,26 @@ namespace Advanced_Text_Adventure
 
         static JsonSerializerOptions options = new() { IncludeFields = true, WriteIndented = true };
 
-        public static bool LoadData()
+        public static void LoadData()
         {
             if (!File.Exists("saveData.json"))
-                return false;
+            {
+                mySave.canLoad = false;
+
+                SaveData();
+                return;
+            }
 
             using StreamReader reader = new("saveData.json");
             saveJson = reader.ReadToEnd();
 
             mySave = JsonSerializer.Deserialize<SaveData>(saveJson, options);
-            return true;
         }
 
         public static void SaveData()
         {
+            mySave.saveDataVersion = saveDataVersion;
+
             string serializedData = JsonSerializer.Serialize(mySave, options);
             saveJson = serializedData;
 
@@ -186,11 +254,22 @@ namespace Advanced_Text_Adventure
             writer.Flush();
         }
 
+        static void ResetSave()
+        {
+            mySave.level = 0;
+            mySave.shopPoints = 0;
+            mySave.canLoad = true;
+
+            SaveData();
+        }
+
         public static void PrintSave()
         {
-            Reader.WriteLine("-- Save Data --\n", 45, ConsoleColor.Gray);
+            Reader.Write("-- Save Data --\n", color: ConsoleColor.Gray);
+            Thread.Sleep(250);
+            Reader.Write($"Level: {mySave.level.ToString()}\n", 55, ConsoleColor.DarkGreen);
             Thread.Sleep(400);
-            Reader.Write("Level: " + mySave.level.ToString(), 65, ConsoleColor.DarkGreen);
+            Reader.Write("Derek Dollars: " + mySave.shopPoints.ToString(), 55, ConsoleColor.DarkGreen);
         }
     }
 }

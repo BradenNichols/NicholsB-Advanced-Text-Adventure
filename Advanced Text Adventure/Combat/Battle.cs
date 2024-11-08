@@ -1,4 +1,5 @@
 ﻿using Advanced_Text_Adventure.Misc;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -93,12 +94,26 @@ namespace Advanced_Text_Adventure
             }
 
             Console.Clear();
+            Console.CursorVisible = true;
 
             if (Player.player.isDead)
             {
                 outcome = "Death";
 
-                Reader.WriteLine("You died at " + levelName + "...", 40, ConsoleColor.Red);
+                int dollarsLost = Math.Clamp(new Random().Next(0, 2), 0, Program.mySave.shopPoints);
+                Program.mySave.shopPoints -= dollarsLost;
+                Program.SaveData();
+
+                Reader.WriteLine($"You died at {levelName}..", 35, ConsoleColor.Red);
+
+                if (levelName != "Tutorial")
+                {
+                    if (dollarsLost > 0)
+                        Reader.WriteLine($"and lost {dollarsLost} derek dollar(s).", 50, ConsoleColor.DarkRed);
+                    else
+                        Reader.WriteLine($"and lost nothing.", 50, ConsoleColor.Blue);
+                }
+
                 Thread.Sleep(750);
             } else
                 outcome = "Win";
